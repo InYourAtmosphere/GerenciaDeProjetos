@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de TAP — Project Charter</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<style>
+:root {
+  --navy: #0f2a4a;
+  --blue: #1a5ea8;
+  --blue-mid: #2d7dd2;
+  --blue-light: #e8f1fb;
+  --accent: #f0a500;
+  --accent-light: #fff8e6;
+  --white: #ffffff;
+  --surface: #f7f9fc;
+  --border: #d0dae8;
+  --text: #1a2636;
+  --text-muted: #5a6b80;
+  --success: #1a7a4a;
+  --success-light: #e6f5ed;
+  --danger: #c0392b;
+  --danger-light: #fdf0ef;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(15,42,74,.08);
+  --shadow-lg: 0 8px 32px rgba(15,42,74,.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--navy);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,.25);
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: #fff;
+  letter-spacing: -.3px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,.45);
+  font-weight: 300;
+  margin-top: 1px;
+}
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.btn-top {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn-ghost { background: rgba(255,255,255,.1); color: #fff; }
+.btn-ghost:hover { background: rgba(255,255,255,.18); }
+.btn-accent { background: var(--accent); color: var(--navy); font-weight: 700; }
+.btn-accent:hover { background: #e09a00; transform: translateY(-1px); }
+.btn-accent:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ── STEP NAV ── */
+.step-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.step-tab {
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.step-tab:hover { color: var(--blue); }
+.step-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.step-tab.active .step-num,
+.step-tab.done .step-num {
+  background: var(--blue);
+  color: #fff;
+}
+.step-tab.done .step-num::after { content: '✓'; }
+.step-tab.done .step-label { text-decoration: line-through; opacity: .6; }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+/* ── SECTION CARD ── */
+.section-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.section-header {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--blue-light) 0%, #f0f5ff 100%);
+}
+.section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); }
+.section-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.section-tag {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--blue);
+  color: #fff;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.section-body { padding: 1.25rem; }
+
+/* ── FORM FIELDS ── */
+.field-group { margin-bottom: 1rem; }
+.field-group:last-child { margin-bottom: 0; }
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.field-label span { color: var(--danger); margin-left: 2px; }
+.field-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-style: italic; }
+
+input[type=text], textarea, select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--white);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+  resize: vertical;
+}
+input[type=text]:focus, textarea:focus, select:focus {
+  border-color: var(--blue-mid);
+  box-shadow: 0 0 0 3px rgba(45,125,210,.12);
+}
+textarea { min-height: 90px; line-height: 1.6; }
+textarea.tall { min-height: 130px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ── RISK / ITEM REPEATER ── */
+.repeater { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.repeater-item {
+  display: grid;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  position: relative;
+}
+.repeater-item.risk-item { grid-template-columns: 3fr 1fr 1fr 2fr 28px; align-items: start; }
+.repeater-item.stake-item { grid-template-columns: 2fr 3fr 1fr 28px; align-items: start; }
+.repeater-item.team-item { grid-template-columns: 2fr 3fr 28px; align-items: start; }
+.repeater-item.phase-item { grid-template-columns: 2fr 1fr 3fr 28px; align-items: start; }
+.btn-remove {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: var(--danger-light);
+  color: var(--danger);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.btn-remove:hover { background: #fbd9d6; }
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border);
+  background: none;
+  color: var(--blue-mid);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: 'DM Sans', sans-serif;
+  width: 100%;
+  justify-content: center;
+}
+.btn-add:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+.col-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 4px;
+}
+
+/* ── PREVIEW ── */
+.preview-wrapper {
+  background: #e0e6ef;
+  border-radius: var(--radius);
+  padding: 2rem;
+  min-height: 500px;
+}
+.doc-preview {
+  background: #fff;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 48px 52px;
+  box-shadow: 0 4px 32px rgba(0,0,0,.18);
+  border-radius: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1a2636;
+}
+.doc-cover-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--navy);
+  border-bottom: 3px solid var(--blue);
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+}
+.doc-cover-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; font-style: italic; }
+.doc-cover-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.doc-cover-table td { padding: 6px 10px; border: 1px solid #d0dae8; font-size: 13px; }
+.doc-cover-table td:first-child { background: var(--blue-light); font-weight: 500; color: var(--navy); width: 38%; }
+.doc-sec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-bottom: 2px solid var(--blue-light);
+  padding-bottom: 5px;
+  margin: 24px 0 10px;
+}
+.doc-text { font-size: 13px; line-height: 1.75; margin-bottom: 8px; text-align: justify; }
+.doc-table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 12px; }
+.doc-table th { background: var(--navy); color: #fff; padding: 5px 8px; text-align: left; font-weight: 500; }
+.doc-table td { padding: 5px 8px; border: 1px solid #d0dae8; }
+.doc-table tr:nth-child(even) td { background: var(--blue-light); }
+.doc-bullets { margin: 6px 0 10px 18px; }
+.doc-bullets li { margin-bottom: 4px; font-size: 13px; }
+
+/* ── GENERATE PANEL ── */
+.gen-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 1.5rem;
+}
+.gen-icon { font-size: 48px; margin-bottom: 12px; }
+.gen-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+.gen-desc { color: var(--text-muted); font-size: 14px; max-width: 500px; margin: 0 auto 24px; line-height: 1.6; }
+.btn-generate {
+  height: 52px;
+  padding: 0 36px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-generate:hover { background: var(--blue); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,42,74,.3); }
+.btn-generate:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--accent));
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+.progress-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+
+.log-box {
+  background: var(--navy);
+  color: #a8c4e0;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  text-align: left;
+  max-height: 160px;
+  overflow-y: auto;
+  margin-top: 12px;
+}
+.log-line { display: block; }
+.log-ok { color: #4fc78a; }
+.log-work { color: #f0a500; }
+.log-err { color: #ff6b6b; }
+
+.dl-card {
+  background: var(--success-light);
+  border: 1px solid #b8dfc9;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 1rem;
+}
+.dl-icon { font-size: 36px; }
+.dl-info h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--success); }
+.dl-info p { font-size: 13px; color: #2d7a52; margin-top: 2px; }
+.btn-dl {
+  margin-left: auto;
+  height: 42px;
+  padding: 0 22px;
+  background: var(--success);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.btn-dl:hover { background: #155f3a; }
+
+/* ── UTIL ── */
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.alert-info { background: var(--blue-light); border: 1px solid #b3cfee; color: var(--blue); }
+.alert-warn { background: var(--accent-light); border: 1px solid #f5d580; color: #7a5100; }
+.alert svg { flex-shrink: 0; margin-top: 1px; }
+
+.nav-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+.btn-nav {
+  height: 40px;
+  padding: 0 22px;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-nav:hover { border-color: var(--blue-mid); color: var(--blue); }
+.btn-nav.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn-nav.primary:hover { background: var(--navy); border-color: var(--navy); }
+
+@media (max-width: 640px) {
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .repeater-item.risk-item { grid-template-columns: 1fr; }
+  .repeater-item.stake-item { grid-template-columns: 1fr; }
+  .repeater-item.team-item { grid-template-columns: 1fr; }
+  .repeater-item.phase-item { grid-template-columns: 1fr; }
+  .topbar { padding: 0 1rem; }
+  .main { padding: 1.25rem 1rem 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">📋</div>
+    <div>
+      <div class="brand-name">TAPBuilder</div>
+      <div class="brand-sub">Gerador de Termo de Abertura de Projeto</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-top btn-ghost" onclick="clearAll()">↺ Limpar</button>
+    <button class="btn-top btn-ghost" onclick="loadExample()">📂 Exemplo Drive Flex</button>
+    <button class="btn-top btn-accent" id="btnGenTop" onclick="goToGenerate()" disabled>⬇ Gerar TAP</button>
+  </div>
+</header>
+
+<!-- STEP NAVIGATION -->
+<nav class="step-nav">
+  <button class="step-tab active" data-panel="p1" onclick="showPanel('p1',this)">
+    <span class="step-num">1</span><span class="step-label">Identificação</span>
+  </button>
+  <button class="step-tab" data-panel="p2" onclick="showPanel('p2',this)">
+    <span class="step-num">2</span><span class="step-label">Contexto</span>
+  </button>
+  <button class="step-tab" data-panel="p3" onclick="showPanel('p3',this)">
+    <span class="step-num">3</span><span class="step-label">Escopo</span>
+  </button>
+  <button class="step-tab" data-panel="p4" onclick="showPanel('p4',this)">
+    <span class="step-num">4</span><span class="step-label">Stakeholders</span>
+  </button>
+  <button class="step-tab" data-panel="p5" onclick="showPanel('p5',this)">
+    <span class="step-num">5</span><span class="step-label">Equipe</span>
+  </button>
+  <button class="step-tab" data-panel="p6" onclick="showPanel('p6',this)">
+    <span class="step-num">6</span><span class="step-label">Restrições & Riscos</span>
+  </button>
+  <button class="step-tab" data-panel="p7" onclick="showPanel('p7',this)">
+    <span class="step-num">7</span><span class="step-label">Cronograma</span>
+  </button>
+  <button class="step-tab" data-panel="p8" onclick="showPanel('p8',this)">
+    <span class="step-num">8</span><span class="step-label">Gerar TAP</span>
+  </button>
+</nav>
+
+<main class="main">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 1 — IDENTIFICAÇÃO -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel active" id="p1">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">🏷️</div>
+      <div><div class="section-title">Identificação do Projeto</div><div class="section-desc">Dados gerais e administrativos do projeto</div></div>
+      <span class="section-tag">Canvas → Cabeçalho</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label class="field-label">Nome do projeto <span>*</span></label>
+        <input type="text" id="nome" placeholder="Ex.: Drive Flex — Sistema de Gestão de Frotas com IA" oninput="checkReady()">
+      </div>
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label">Gerente de projetos <span>*</span></label>
+          <input type="text" id="gerente" placeholder="Nome completo" oninput="checkReady()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Patrocinador (sponsor) <span>*</span></label>
+          <input type="text" id="sponsor" placeholder="Ex.: Diretoria / CEO" oninput="checkReady()">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label">Organização / Empresa</label>
+          <input type="text" id="empresa" placeholder="Ex.: Drive Flex Ltda.">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Data de elaboração</label>
+          <input type="text" id="data" placeholder="Ex.: Março de 2026">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label">Disciplina / Contexto</label>
+          <input type="text" id="disciplina" placeholder="Ex.: Gerência de Projetos — Eng. de Software">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Versão do documento</label>
+          <input type="text" id="versao" placeholder="Ex.: 1.0">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <div></div>
+    <button class="btn-nav primary" onclick="showPanel('p2', navBtn('p2'))">Próximo →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 2 — CONTEXTO -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p2">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">📌</div>
+      <div><div class="section-title">Justificativa e Objetivo</div><div class="section-desc">Por que o projeto existe e o que deve ser alcançado</div></div>
+      <span class="section-tag">Canvas → Justificativas + Obj. SMART</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label class="field-label">Justificativa (problema atual) <span>*</span></label>
+        <textarea id="justificativa" class="tall" placeholder="Descreva o contexto atual, os problemas existentes e por que este projeto é necessário agora. Ex.: processos manuais, planilhas descentralizadas, falta de integração..." oninput="checkReady()"></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Justificativas — Passado"</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Objetivo SMART <span>*</span></label>
+        <textarea id="objetivo" class="tall" placeholder="Descreva o objetivo de forma específica, mensurável, alcançável, relevante e com prazo definido. Ex.: Desenvolver e implantar sistema X em 12 meses, dentro do orçamento aprovado, eliminando Y e entregando Z." oninput="checkReady()"></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Obj. SMART"</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Benefícios esperados</label>
+        <textarea id="beneficios" placeholder="Liste os benefícios: redução de custos, melhoria de processos, ganhos de eficiência, vantagem competitiva..."></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Benefícios — Futuro"</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p1', navBtn('p1'))">← Anterior</button>
+    <button class="btn-nav primary" onclick="showPanel('p3', navBtn('p3'))">Próximo →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 3 — ESCOPO -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p3">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">📦</div>
+      <div><div class="section-title">Produto, Escopo e Requisitos</div><div class="section-desc">O que será entregue e o que está fora do projeto</div></div>
+      <span class="section-tag">Canvas → Produto + Requisitos</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label class="field-label">Descrição do produto / solução <span>*</span></label>
+        <textarea id="produto" placeholder="Descreva o que será criado/entregue. Ex.: sistema web integrado de gestão de frotas com módulo de IA e integração WhatsApp..." oninput="checkReady()"></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Produto"</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Funcionalidades / requisitos de alto nível (escopo incluído)</label>
+        <textarea id="requisitos" placeholder="Liste as principais funcionalidades incluídas. Ex.: cadastro de veículos; controle de disponibilidade multilocais; registro de locação; controle de KM/revisões; IA para depreciação..."></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Requisitos"</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Exclusões do escopo (fora do projeto)</label>
+        <textarea id="exclusoes" placeholder="O que NÃO está incluído neste projeto. Ex.: operação física de retirada e devolução; suporte pós-implantação; treinamento de parceiros externos..."></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Premissas" (o que permanece como está)</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p2', navBtn('p2'))">← Anterior</button>
+    <button class="btn-nav primary" onclick="showPanel('p4', navBtn('p4'))">Próximo →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 4 — STAKEHOLDERS -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p4">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">👥</div>
+      <div><div class="section-title">Partes Interessadas</div><div class="section-desc">Quem afeta ou é afetado pelo projeto</div></div>
+      <span class="section-tag">Canvas → Stakeholders externos</span>
+    </div>
+    <div class="section-body">
+      <div style="display:grid;grid-template-columns:2fr 3fr 1fr 28px;gap:6px;margin-bottom:8px;padding:0 12px">
+        <span class="col-label">Parte Interessada</span>
+        <span class="col-label">Papel / Interesse</span>
+        <span class="col-label">Impacto</span>
+        <span></span>
+      </div>
+      <div class="repeater" id="stakes-list"></div>
+      <button class="btn-add" onclick="addStake()">＋ Adicionar parte interessada</button>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p3', navBtn('p3'))">← Anterior</button>
+    <button class="btn-nav primary" onclick="showPanel('p5', navBtn('p5'))">Próximo →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 5 — EQUIPE -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p5">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">🛠️</div>
+      <div><div class="section-title">Equipe do Projeto</div><div class="section-desc">Papéis e responsabilidades macro</div></div>
+      <span class="section-tag">Canvas → Equipe</span>
+    </div>
+    <div class="section-body">
+      <div style="display:grid;grid-template-columns:2fr 3fr 28px;gap:6px;margin-bottom:8px;padding:0 12px">
+        <span class="col-label">Papel / Função</span>
+        <span class="col-label">Responsabilidade macro</span>
+        <span></span>
+      </div>
+      <div class="repeater" id="team-list"></div>
+      <button class="btn-add" onclick="addTeam()">＋ Adicionar membro</button>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p4', navBtn('p4'))">← Anterior</button>
+    <button class="btn-nav primary" onclick="showPanel('p6', navBtn('p6'))">Próximo →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 6 — RESTRIÇÕES & RISCOS -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p6">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">⚠️</div>
+      <div><div class="section-title">Premissas e Restrições</div><div class="section-desc">O que é assumido como verdade e o que limita o projeto</div></div>
+      <span class="section-tag">Canvas → Premissas + Restrições</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label class="field-label">Premissas do projeto</label>
+        <textarea id="premissas" placeholder="Liste o que é assumido como verdade. Ex.: clientes usam WhatsApp ativamente; APIs de mercado estarão disponíveis; orçamento será liberado conforme cronograma..."></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Restrições do projeto</label>
+        <textarea id="restricoes" placeholder="Liste os limites que não podem ser ultrapassados. Ex.: prazo máximo de 12 meses; orçamento limitado; dependência de fontes externas para IA..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">🔴</div>
+      <div><div class="section-title">Riscos Iniciais</div><div class="section-desc">Ameaças identificadas no nível de iniciação</div></div>
+      <span class="section-tag">Canvas → Riscos</span>
+    </div>
+    <div class="section-body">
+      <div style="display:grid;grid-template-columns:3fr 1fr 1fr 2fr 28px;gap:6px;margin-bottom:8px;padding:0 12px">
+        <span class="col-label">Descrição do risco</span>
+        <span class="col-label">Prob.</span>
+        <span class="col-label">Impacto</span>
+        <span class="col-label">Estratégia</span>
+        <span></span>
+      </div>
+      <div class="repeater" id="risks-list"></div>
+      <button class="btn-add" onclick="addRisk()">＋ Adicionar risco</button>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p5', navBtn('p5'))">← Anterior</button>
+    <button class="btn-nav primary" onclick="showPanel('p7', navBtn('p7'))">Próximo →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 7 — CRONOGRAMA -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p7">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon">📅</div>
+      <div><div class="section-title">Cronograma Macro e Orçamento</div><div class="section-desc">Fases, entregas e categorias de custo</div></div>
+      <span class="section-tag">Canvas → Linha do tempo + Custos</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label class="field-label">Duração total estimada do projeto</label>
+        <input type="text" id="duracao" placeholder="Ex.: 12 meses">
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 3fr 28px;gap:6px;margin-bottom:8px;padding:0 12px">
+        <span class="col-label">Fase / Grupo de Entrega</span>
+        <span class="col-label">Período</span>
+        <span class="col-label">Entregas principais</span>
+        <span></span>
+      </div>
+      <div class="repeater" id="phases-list"></div>
+      <button class="btn-add" onclick="addPhase()">＋ Adicionar fase</button>
+      <div style="margin-top:1.5rem">
+        <label class="field-label">Categorias de custo / orçamento estimado</label>
+        <textarea id="custos" placeholder="Liste as categorias de custo identificadas. Ex.: equipe de desenvolvimento (12 meses); licenciamento de APIs; infraestrutura em nuvem; treinamento e Go-Live..."></textarea>
+        <div class="field-hint">Origem no Canvas: bloco "Custos". Valores exatos devem ser definidos no planejamento.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p6', navBtn('p6'))">← Anterior</button>
+    <button class="btn-nav primary" onclick="goToGenerate()">Gerar TAP →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PANEL 8 — GERAR -->
+<!-- ════════════════════════════════════════════ -->
+<div class="panel" id="p8">
+  <div class="gen-card">
+    <div class="gen-icon">📄</div>
+    <div class="gen-title">Gerar Termo de Abertura</div>
+    <div class="gen-desc">O TAPBuilder vai usar IA para transformar os dados do Canvas em um documento formal profissional em Word (.docx), pronto para assinar e entregar.</div>
+    <button class="btn-generate" id="btnGen" onclick="generateTAP()">
+      <span>✨</span> Gerar documento com IA
+    </button>
+  </div>
+
+  <div id="progress-area" style="display:none" class="section-card" style="padding:1.5rem">
+    <div style="padding:1.5rem">
+      <div class="progress-label" id="prog-label">Preparando...</div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="log-box" id="log-box"></div>
+    </div>
+  </div>
+
+  <div id="dl-area" style="display:none">
+    <div class="dl-card">
+      <div class="dl-icon">✅</div>
+      <div class="dl-info">
+        <h3>TAP gerado com sucesso!</h3>
+        <p id="dl-filename">TAP_Projeto.docx — documento completo pronto para entrega</p>
+      </div>
+      <button class="btn-dl" id="btn-dl" onclick="downloadDocx()">⬇ Baixar .docx</button>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <button class="btn-nav" onclick="showPanel('p7', navBtn('p7'))">← Voltar ao formulário</button>
+    <div></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let docxBlob = null;
+let stakeCount = 0, teamCount = 0, riskCount = 0, phaseCount = 0;
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+function navBtn(pid) {
+  return document.querySelector(`.step-tab[data-panel="${pid}"]`);
+}
+function goToGenerate() {
+  showPanel('p8', navBtn('p8'));
+}
+
+// ═══════════════════════════════════════════════
+// READY CHECK
+// ═══════════════════════════════════════════════
+function checkReady() {
+  const ok = v('nome') && v('gerente') && v('sponsor') && v('justificativa') && v('objetivo') && v('produto');
+  document.getElementById('btnGenTop').disabled = !ok;
+}
+function v(id) { return (document.getElementById(id)||{}).value?.trim(); }
+
+// ═══════════════════════════════════════════════
+// REPEATERS
+// ═══════════════════════════════════════════════
+function addStake(nome='', papel='', impacto='Alto') {
+  const id = ++stakeCount;
+  const div = document.createElement('div');
+  div.className = 'repeater-item stake-item';
+  div.id = `stake-${id}`;
+  div.innerHTML = `
+    <div><div class="col-label">Parte interessada</div><input type="text" placeholder="Ex.: Diretoria" value="${nome}"></div>
+    <div><div class="col-label">Papel / Interesse</div><input type="text" placeholder="Ex.: Patrocinadora — aprova orçamento" value="${papel}"></div>
+    <div><div class="col-label">Impacto</div>
+      <select>
+        <option${impacto==='Alto'?' selected':''}>Alto</option>
+        <option${impacto==='Médio'?' selected':''}>Médio</option>
+        <option${impacto==='Baixo'?' selected':''}>Baixo</option>
+      </select>
+    </div>
+    <button class="btn-remove" onclick="document.getElementById('stake-${id}').remove()">✕</button>`;
+  document.getElementById('stakes-list').appendChild(div);
+}
+
+function addTeam(papel='', resp='') {
+  const id = ++teamCount;
+  const div = document.createElement('div');
+  div.className = 'repeater-item team-item';
+  div.id = `team-${id}`;
+  div.innerHTML = `
+    <div><div class="col-label">Papel</div><input type="text" placeholder="Ex.: Gerente de Projetos" value="${papel}"></div>
+    <div><div class="col-label">Responsabilidade</div><input type="text" placeholder="Ex.: Planejamento, controle e comunicação" value="${resp}"></div>
+    <button class="btn-remove" onclick="document.getElementById('team-${id}').remove()">✕</button>`;
+  document.getElementById('team-list').appendChild(div);
+}
+
+function addRisk(desc='', prob='Médio', impacto='Alto', estrategia='') {
+  const id = ++riskCount;
+  const div = document.createElement('div');
+  div.className = 'repeater-item risk-item';
+  div.id = `risk-${id}`;
+  div.innerHTML = `
+    <div><div class="col-label">Descrição</div><input type="text" placeholder="Ex.: Baixa adoção pelos usuários finais" value="${desc}"></div>
+    <div><div class="col-label">Probabilidade</div>
+      <select>
+        <option${prob==='Alto'?' selected':''}>Alto</option>
+        <option${prob==='Médio'?' selected':''}>Médio</option>
+        <option${prob==='Baixo'?' selected':''}>Baixo</option>
+      </select>
+    </div>
+    <div><div class="col-label">Impacto</div>
+      <select>
+        <option${impacto==='Alto'?' selected':''}>Alto</option>
+        <option${impacto==='Médio'?' selected':''}>Médio</option>
+        <option${impacto==='Baixo'?' selected':''}>Baixo</option>
+      </select>
+    </div>
+    <div><div class="col-label">Estratégia macro</div><input type="text" placeholder="Ex.: Plano de treinamento no Go-Live" value="${estrategia}"></div>
+    <button class="btn-remove" onclick="document.getElementById('risk-${id}').remove()">✕</button>`;
+  document.getElementById('risks-list').appendChild(div);
+}
+
+function addPhase(fase='', periodo='', entregas='') {
+  const id = ++phaseCount;
+  const div = document.createElement('div');
+  div.className = 'repeater-item phase-item';
+  div.id = `phase-${id}`;
+  div.innerHTML = `
+    <div><div class="col-label">Fase</div><input type="text" placeholder="Ex.: Planejamento" value="${fase}"></div>
+    <div><div class="col-label">Período</div><input type="text" placeholder="Ex.: Meses 1–2" value="${periodo}"></div>
+    <div><div class="col-label">Entregas principais</div><input type="text" placeholder="Ex.: EAP, plano de projeto, requisitos" value="${entregas}"></div>
+    <button class="btn-remove" onclick="document.getElementById('phase-${id}').remove()">✕</button>`;
+  document.getElementById('phases-list').appendChild(div);
+}
+
+// ═══════════════════════════════════════════════
+// DATA COLLECTION
+// ═══════════════════════════════════════════════
+function collectData() {
+  const stakes = [];
+  document.querySelectorAll('#stakes-list .stake-item').forEach(el => {
+    const inputs = el.querySelectorAll('input,select');
+    stakes.push({ nome: inputs[0].value, papel: inputs[1].value, impacto: inputs[2].value });
+  });
+  const team = [];
+  document.querySelectorAll('#team-list .team-item').forEach(el => {
+    const inputs = el.querySelectorAll('input');
+    team.push({ papel: inputs[0].value, resp: inputs[1].value });
+  });
+  const risks = [];
+  document.querySelectorAll('#risks-list .risk-item').forEach(el => {
+    const inputs = el.querySelectorAll('input,select');
+    risks.push({ desc: inputs[0].value, prob: inputs[1].value, impacto: inputs[2].value, estrategia: inputs[3].value });
+  });
+  const phases = [];
+  document.querySelectorAll('#phases-list .phase-item').forEach(el => {
+    const inputs = el.querySelectorAll('input');
+    phases.push({ fase: inputs[0].value, periodo: inputs[1].value, entregas: inputs[2].value });
+  });
+  return {
+    nome: v('nome'), gerente: v('gerente'), sponsor: v('sponsor'),
+    empresa: v('empresa')||'', data: v('data')||new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}),
+    disciplina: v('disciplina')||'', versao: v('versao')||'1.0',
+    justificativa: v('justificativa'), objetivo: v('objetivo'),
+    beneficios: v('beneficios')||'', produto: v('produto'),
+    requisitos: v('requisitos')||'', exclusoes: v('exclusoes')||'',
+    premissas: v('premissas')||'', restricoes: v('restricoes')||'',
+    custos: v('custos')||'', duracao: v('duracao')||'',
+    stakes, team, risks, phases
+  };
+}
+
+// ═══════════════════════════════════════════════
+// AI ENRICHMENT via Claude API
+// ═══════════════════════════════════════════════
+async function enrichWithAI(data) {
+  const prompt = `Você é um especialista em gerência de projetos (PMBOK). Com base nos dados do Project Model Canvas abaixo, expanda cada seção em texto formal e profissional para compor o TAP (Termo de Abertura do Projeto). Retorne APENAS um JSON válido com as chaves abaixo, sem markdown.
+
+DADOS DO CANVAS:
+- Projeto: ${data.nome}
+- Justificativa: ${data.justificativa}
+- Objetivo: ${data.objetivo}
+- Produto: ${data.produto}
+- Requisitos: ${data.requisitos}
+- Exclusões: ${data.exclusoes}
+- Premissas: ${data.premissas}
+- Restrições: ${data.restricoes}
+- Benefícios: ${data.beneficios}
+- Custos: ${data.custos}
+- Stakeholders: ${JSON.stringify(data.stakes)}
+- Equipe: ${JSON.stringify(data.team)}
+- Riscos: ${JSON.stringify(data.risks)}
+- Fases: ${JSON.stringify(data.phases)}
+
+Retorne JSON com estas chaves (todas as strings em português formal, 2-4 parágrafos quando indicado):
+{
+  "justificativa_expandida": "texto formal com 2-3 parágrafos expandindo a justificativa, contextualizando o problema e a necessidade do projeto",
+  "objetivo_expandido": "texto formal com 1-2 parágrafos expandindo o objetivo SMART",
+  "produto_expandido": "texto formal descrevendo o produto/solução em 1-2 parágrafos",
+  "premissas_lista": ["premissa 1 formal", "premissa 2 formal", "..."],
+  "restricoes_lista": ["restrição 1 formal com letra bold no início ex: 'Prazo: texto'", "..."],
+  "beneficios_lista": ["benefício 1 formal", "..."],
+  "custos_lista": ["categoria: descrição", "..."],
+  "autorizacao": "parágrafo formal de autorização do projeto com 2-3 linhas",
+  "nota_risco": "frase curta de nota sobre o plano completo de riscos ser feito no planejamento",
+  "nota_orcamento": "frase curta de nota sobre valores serem definidos no planejamento"
+}`;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!resp.ok) throw new Error(`API ${resp.status}`);
+  const json = await resp.json();
+  const text = json.content[0].text.replace(/```json|```/g,'').trim();
+  return JSON.parse(text);
+}
+
+// ═══════════════════════════════════════════════
+// DOCX GENERATION
+// ═══════════════════════════════════════════════
+async function buildDocx(data, ai) {
+  const {
+    Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+    AlignmentType, BorderStyle, WidthType, ShadingType, LevelFormat,
+    VerticalAlign, Header, Footer, PageBreak
+  } = docx;
+
+  const BLUE = '1a5ea8'; const NAVY = '0f2a4a';
+  const BLUE_LIGHT = 'dce8f7'; const ACCENT = 'f0a500';
+  const GRAY = 'f7f9fc'; const BORDER = 'c8d8ec';
+  const WHITE = 'FFFFFF'; const MUTED = '5a6b80';
+
+  const bdr = s => ({ style: BorderStyle.SINGLE, size: s||1, color: BORDER });
+  const borders = { top:bdr(),bottom:bdr(),left:bdr(),right:bdr() };
+  const noBdr = { style: BorderStyle.NONE, size:0, color:WHITE };
+  const noBorders = { top:noBdr,bottom:noBdr,left:noBdr,right:noBdr };
+
+  const run = (text,opts={}) => new TextRun({
+    text, font:'Calibri', size:opts.size||22,
+    bold:opts.bold||false, color:opts.color||'000000',
+    italics:opts.italic||false
+  });
+
+  const para = (children, opts={}) => new Paragraph({
+    alignment: opts.align || AlignmentType.JUSTIFIED,
+    spacing: { before:opts.before??80, after:opts.after??100 },
+    ...opts.numbering ? {numbering:opts.numbering} : {},
+    ...opts.border ? {border:opts.border} : {},
+    children: Array.isArray(children) ? children : [children]
+  });
+
+  const secTitle = (num, title) => new Paragraph({
+    spacing: { before:320, after:120 },
+    border: { bottom:{ style:BorderStyle.THICK, size:6, color:BLUE } },
+    children: [
+      run(`${num}.  `, {bold:true,size:24,color:BLUE}),
+      run(title.toUpperCase(), {bold:true,size:24,color:BLUE})
+    ]
+  });
+
+  const fieldLabel = txt => new Paragraph({
+    spacing:{before:120,after:20},
+    children:[run(txt.toUpperCase(),{size:18,bold:true,color:MUTED})]
+  });
+
+  const fieldVal = txt => new Paragraph({
+    alignment:AlignmentType.JUSTIFIED,
+    spacing:{before:20,after:100},
+    children:[run(txt,{size:22})]
+  });
+
+  const cell = (text, opts={}) => new TableCell({
+    borders,
+    width:{ size:opts.width||2000, type:WidthType.DXA },
+    shading:{ fill:opts.fill||WHITE, type:ShadingType.CLEAR },
+    margins:{ top:80,bottom:80,left:120,right:120 },
+    verticalAlign:VerticalAlign.CENTER,
+    children:[para(run(text,{size:20,bold:opts.bold||false,color:opts.textColor||'000000'})
+      ,{align:opts.align||AlignmentType.LEFT,before:0,after:0})]
+  });
+
+  const headerRow = (cols,widths) => new TableRow({ children:
+    cols.map((c,i)=>cell(c,{width:widths[i],fill:NAVY,bold:true,textColor:WHITE}))
+  });
+
+  const dataRow = (cols, widths, even) => new TableRow({ children:
+    cols.map((c,i)=>cell(c,{width:widths[i],fill:even?GRAY:WHITE}))
+  });
+
+  const table = (headers, rows, widths) => new Table({
+    width:{size:9266,type:WidthType.DXA}, columnWidths:widths,
+    rows:[ headerRow(headers,widths), ...rows.map((r,i)=>dataRow(r,widths,i%2===1)) ]
+  });
+
+  const noteBox = (text,fill=BLUE_LIGHT,bColor=BLUE) => new Table({
+    width:{size:9266,type:WidthType.DXA}, columnWidths:[9266],
+    rows:[new TableRow({children:[new TableCell({
+      width:{size:9266,type:WidthType.DXA},
+      shading:{fill,type:ShadingType.CLEAR},
+      margins:{top:100,bottom:100,left:180,right:120},
+      borders:{top:bdr(3),bottom:bdr(3),right:bdr(3),
+        left:{style:BorderStyle.THICK,size:14,color:bColor}},
+      children:[para(run(text,{size:20,italic:true,color:'000000'}),
+        {align:AlignmentType.JUSTIFIED,before:0,after:0})]
+    })]})]}
+  );
+
+  const sp = (n=1) => new Paragraph({
+    spacing:{before:0,after:0},
+    children:[run('',{size:n*8})]
+  });
+
+  const bullet = (text, ref='bullets') => new Paragraph({
+    numbering:{reference:ref,level:0},
+    alignment:AlignmentType.JUSTIFIED,
+    spacing:{before:40,after:40},
+    children:[run(text,{size:22})]
+  });
+
+  const alphaItem = (label, text) => para(
+    [run(`${label}  `,{bold:true,size:22}), run(text,{size:22})],
+    {align:AlignmentType.JUSTIFIED, before:80, after:80}
+  );
+
+  // ── expand text to multiple paras ──
+  const expandParas = (text) => (text||'').split(/\n+/).filter(Boolean).map(t=>
+    para(run(t,{size:22}),{align:AlignmentType.JUSTIFIED,before:60,after:100})
+  );
+
+  // ── split bullets by line or semicolon ──
+  const splitBullets = (arr) => arr.flatMap(item =>
+    item.split(/[;\n]+/).map(s=>s.trim()).filter(Boolean)
+  );
+
+  const aiPremissas = splitBullets(ai.premissas_lista||[]);
+  const aiRestricoes = ai.restricoes_lista||[];
+  const aiBeneficios = splitBullets(ai.beneficios_lista||[]);
+  const aiCustos = splitBullets(ai.custos_lista||[]);
+
+  // ── parse restricoes alpha: "Prazo: texto" ──
+  const restricoesAlpha = aiRestricoes.map((r,i)=>{
+    const letters = ['a)','b)','c)','d)','e)','f)'];
+    const colonIdx = r.indexOf(':');
+    if(colonIdx>0 && colonIdx<25) {
+      return alphaItem(letters[i]||`${i+1})`, r);
+    }
+    return alphaItem(letters[i]||`${i+1})`, r);
+  });
+
+  const fname = `TAP_${data.nome.replace(/[^a-z0-9]/gi,'_').slice(0,30)}.docx`;
+
+  const doc = new Document({
+    numbering:{config:[
+      {reference:'bullets', levels:[{
+        level:0, format:LevelFormat.BULLET, text:'\u2022', alignment:AlignmentType.LEFT,
+        style:{paragraph:{indent:{left:540,hanging:260}}}
+      }]},
+      {reference:'alpha', levels:[{
+        level:0, format:LevelFormat.LOWER_LETTER, text:'%1)', alignment:AlignmentType.LEFT,
+        style:{paragraph:{indent:{left:540,hanging:260}}}
+      }]}
+    ]},
+    styles:{
+      default:{document:{run:{font:'Calibri',size:22}}},
+    },
+    sections:[{
+      properties:{
+        page:{
+          size:{width:11906,height:16838},
+          margin:{top:1100,right:1100,bottom:1100,left:1440}
+        }
+      },
+      headers:{
+        default:new Header({children:[
+          new Table({
+            width:{size:9266,type:WidthType.DXA},
+            columnWidths:[6500,2766],
+            rows:[new TableRow({children:[
+              new TableCell({
+                borders:{...noBorders,bottom:{style:BorderStyle.SINGLE,size:8,color:BLUE}},
+                width:{size:6500,type:WidthType.DXA},
+                shading:{fill:WHITE,type:ShadingType.CLEAR},
+                margins:{top:40,bottom:40,left:0,right:0},
+                children:[
+                  para(run('TERMO DE ABERTURA DO PROJETO',{size:18,bold:true,color:BLUE}),{before:0,after:4}),
+                  para(run(data.nome,{size:16,color:MUTED}),{before:0,after:0})
+                ]
+              }),
+              new TableCell({
+                borders:{...noBorders,bottom:{style:BorderStyle.SINGLE,size:8,color:BLUE}},
+                width:{size:2766,type:WidthType.DXA},
+                shading:{fill:WHITE,type:ShadingType.CLEAR},
+                margins:{top:40,bottom:40,left:0,right:0},
+                verticalAlign:VerticalAlign.BOTTOM,
+                children:[para(run(`v${data.versao} | ${data.data}`,{size:16,color:MUTED}),
+                  {align:AlignmentType.RIGHT,before:0,after:0})]
+              })
+            ]})]
+          })
+        ]})
+      },
+      footers:{
+        default:new Footer({children:[
+          para([
+            run(`${data.nome}  |  TAP v${data.versao}  |  Gerência de Projetos`,{size:16,color:MUTED})
+          ],{align:AlignmentType.CENTER,before:80,after:0,
+            border:{top:{style:BorderStyle.SINGLE,size:4,color:BORDER}}})
+        ]})
+      },
+      children:[
+
+        // ── CAPA ──
+        sp(12),
+        new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{before:0,after:40},
+          border:{bottom:{style:BorderStyle.THICK,size:8,color:BLUE}},
+          children:[run('TERMO DE ABERTURA DO PROJETO',{size:42,bold:true,color:NAVY})]
+        }),
+        new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{before:0,after:0},
+          children:[run('Project Charter — PMBOK Iniciação Processo 4.1',{size:22,italic:true,color:MUTED})]
+        }),
+        sp(6),
+        new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{before:0,after:20},
+          children:[run(data.nome,{size:52,bold:true,color:BLUE})]
+        }),
+        data.empresa ? new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{before:0,after:0},
+          children:[run(data.empresa,{size:26,color:MUTED})]
+        }) : sp(1),
+        sp(8),
+        new Table({
+          width:{size:7000,type:WidthType.DXA},
+          columnWidths:[2800,4200],
+          rows:[
+            ['Gerente de Projetos','Patrocinador','Data','Versão','Disciplina']
+              .filter((_,i)=>[data.gerente,data.sponsor,data.data,data.versao,data.disciplina][i])
+              .map((label,i)=>{
+                const vals=[data.gerente,data.sponsor,data.data,data.versao,data.disciplina];
+                const labels=['Gerente de Projetos','Patrocinador','Data de Elaboração','Versão','Disciplina'];
+                return null;
+              }),
+          ].filter(Boolean),
+          rows: [
+            ...[
+              ['Gerente de Projetos', data.gerente],
+              ['Patrocinador', data.sponsor],
+              ['Data de Elaboração', data.data],
+              ['Versão', `v${data.versao} — Documento Inicial`],
+              data.empresa ? ['Organização', data.empresa] : null,
+              data.disciplina ? ['Disciplina', data.disciplina] : null,
+            ].filter(Boolean).map(([label,val],i)=>
+              new TableRow({children:[
+                cell(label,{width:2800,fill:BLUE_LIGHT,bold:true,textColor:NAVY}),
+                cell(val,{width:4200})
+              ]})
+            )
+          ]
+        }),
+        sp(4),
+
+        // PAGE BREAK
+        new Paragraph({children:[new PageBreak()]}),
+
+        // ── SEC 1: IDENTIFICAÇÃO ──
+        secTitle('1','Identificação do Projeto'),
+        sp(2),
+        table(
+          ['Campo','Informação'],
+          [
+            ['Nome do Projeto', data.nome],
+            ['Gerente de Projetos', data.gerente],
+            ['Patrocinador', data.sponsor],
+            ['Data de Elaboração', data.data],
+            ['Versão do Documento', `v${data.versao} — Documento Inicial de Abertura`],
+            ['Referência Metodológica', 'PMBOK — Grupo de Processos de Iniciação (Processo 4.1)'],
+            ...(data.empresa?[['Organização',data.empresa]]:[]),
+            ...(data.disciplina?[['Contexto',data.disciplina]]:[]),
+          ],
+          [3200,6066]
+        ),
+        sp(3),
+
+        // ── SEC 2: JUSTIFICATIVA ──
+        secTitle('2','Justificativa do Projeto'),
+        sp(2),
+        ...expandParas(ai.justificativa_expandida),
+        sp(3),
+
+        // ── SEC 3: OBJETIVO ──
+        secTitle('3','Objetivo do Projeto (SMART)'),
+        sp(2),
+        ...expandParas(ai.objetivo_expandido),
+        sp(2),
+        table(
+          ['Critério SMART','Verificação'],
+          [
+            ['Específico (Specific)','Produto e entrega claramente definidos no escopo do projeto'],
+            ['Mensurável (Measurable)','Critérios de sucesso e indicadores definidos no objetivo'],
+            ['Alcançável (Achievable)','Equipe multidisciplinar e tecnologias viáveis identificadas'],
+            ['Relevante (Relevant)','Alinhado ao problema de negócio identificado na justificativa'],
+            ['Temporal (Time-bound)',data.duracao ? `Prazo de ${data.duracao} definido` : 'Prazo explicitamente definido no objetivo'],
+          ],
+          [3000,6266]
+        ),
+        sp(3),
+
+        // ── SEC 4: PRODUTO / ESCOPO ──
+        secTitle('4','Descrição do Produto e Escopo de Alto Nível'),
+        sp(2),
+        fieldLabel('4.1  Produto do Projeto'),
+        ...expandParas(ai.produto_expandido),
+        sp(1),
+        ...( data.requisitos ? [
+          fieldLabel('4.2  Funcionalidades / Requisitos de Alto Nível (Escopo Incluído)'),
+          ...data.requisitos.split(/[;\n]+/).map(r=>r.trim()).filter(Boolean).map(r=>bullet(r)),
+          sp(1)
+        ] : []),
+        ...( data.exclusoes ? [
+          fieldLabel('4.3  Exclusões do Escopo (Fora do Projeto)'),
+          ...data.exclusoes.split(/[;\n]+/).map(r=>r.trim()).filter(Boolean).map(r=>bullet(r)),
+          sp(1)
+        ] : []),
+        sp(2),
+
+        // ── SEC 5: STAKEHOLDERS ──
+        secTitle('5','Partes Interessadas (Stakeholders)'),
+        sp(2),
+        ...(data.stakes.length > 0 ? [
+          table(
+            ['Parte Interessada','Papel / Interesse','Impacto'],
+            data.stakes.map(s=>[s.nome,s.papel,s.impacto]),
+            [2400,5466,1400]
+          )
+        ] : [para(run('Nenhuma parte interessada cadastrada.',{size:22,italic:true,color:MUTED}))]),
+        sp(3),
+
+        // ── SEC 6: EQUIPE ──
+        secTitle('6','Equipe do Projeto'),
+        sp(2),
+        ...(data.team.length > 0 ? [
+          table(
+            ['Papel / Função','Responsabilidade Macro'],
+            data.team.map(t=>[t.papel,t.resp]),
+            [3200,6066]
+          )
+        ] : [para(run('Equipe não cadastrada.',{size:22,italic:true,color:MUTED}))]),
+        sp(3),
+
+        // ── SEC 7: PREMISSAS ──
+        secTitle('7','Premissas do Projeto'),
+        sp(2),
+        para(run('Para a execução deste projeto, as seguintes condições são assumidas como verdadeiras. O não cumprimento de qualquer premissa deve ser tratado como risco e comunicado imediatamente ao gerente do projeto:',{size:22}),{align:AlignmentType.JUSTIFIED}),
+        sp(1),
+        ...(aiPremissas.length > 0
+          ? aiPremissas.map(p=>bullet(p))
+          : [para(run('Premissas não informadas.',{size:22,italic:true,color:MUTED}))]),
+        sp(1),
+        noteBox('Atenção: premissas não verificadas são fontes potenciais de risco. Cada premissa deve ser monitorada ativamente durante a execução do projeto.','FFF8E6','f0a500'),
+        sp(3),
+
+        // ── SEC 8: RESTRIÇÕES ──
+        secTitle('8','Restrições do Projeto'),
+        sp(2),
+        para(run('O projeto está sujeito às seguintes restrições, que delimitam o espaço de solução e devem ser respeitadas em todas as fases de execução:',{size:22}),{align:AlignmentType.JUSTIFIED}),
+        sp(1),
+        ...(restricoesAlpha.length > 0
+          ? restricoesAlpha
+          : [para(run('Restrições não informadas.',{size:22,italic:true,color:MUTED}))]),
+        sp(3),
+
+        // ── SEC 9: RISCOS ──
+        secTitle('9','Riscos Iniciais Identificados'),
+        sp(2),
+        para(run('Os riscos a seguir foram identificados em nível macro durante a fase de iniciação. O plano completo de riscos será elaborado na fase de Planejamento.',{size:22}),{align:AlignmentType.JUSTIFIED}),
+        sp(1),
+        ...(data.risks.length > 0 ? [
+          table(
+            ['Risco','Prob.','Impacto','Estratégia Macro'],
+            data.risks.map(r=>[r.desc,r.prob,r.impacto,r.estrategia]),
+            [3400,900,900,4066]
+          )
+        ] : [para(run('Nenhum risco cadastrado.',{size:22,italic:true,color:MUTED}))]),
+        sp(1),
+        noteBox(ai.nota_risco || 'O plano completo de riscos, com análise qualitativa, quantitativa e planos de resposta detalhados, será elaborado na fase de Planejamento.'),
+        sp(3),
+
+        // ── SEC 10: CRONOGRAMA ──
+        secTitle('10','Cronograma Macro'),
+        sp(2),
+        ...(data.duracao ? [fieldLabel(`Duração total estimada: ${data.duracao}`),sp(1)] : []),
+        ...(data.phases.length > 0 ? [
+          table(
+            ['Fase / Grupo de Entrega','Período','Entregas Principais'],
+            data.phases.map(f=>[f.fase,f.periodo,f.entregas]),
+            [2800,1400,5066]
+          )
+        ] : [para(run('Cronograma não cadastrado.',{size:22,italic:true,color:MUTED}))]),
+        sp(1),
+        noteBox('O cronograma detalhado com datas precisas, marcos, dependências e caminho crítico será desenvolvido na fase de Planejamento.'),
+        sp(3),
+
+        // ── SEC 11: ORÇAMENTO ──
+        secTitle('11','Orçamento Estimado'),
+        sp(2),
+        para(run('O orçamento detalhado com valores monetários será definido e aprovado formalmente na fase de Planejamento. As categorias de custo identificadas em nível macro são:',{size:22}),{align:AlignmentType.JUSTIFIED}),
+        sp(1),
+        ...(aiCustos.length > 0
+          ? aiCustos.map(c=>bullet(c))
+          : data.custos ? data.custos.split(/[;\n]+/).map(c=>c.trim()).filter(Boolean).map(c=>bullet(c))
+          : [para(run('Categorias de custo não informadas.',{size:22,italic:true,color:MUTED}))]),
+        sp(1),
+        noteBox(ai.nota_orcamento || 'Os valores monetários exatos devem ser levantados, detalhados e formalmente aprovados pela diretoria antes do início da execução.','FFF8E6','f0a500'),
+        sp(3),
+
+        // ── SEC 12: BENEFÍCIOS ──
+        ...(aiBeneficios.length > 0 ? [
+          secTitle('12','Benefícios Esperados'),
+          sp(2),
+          para(run('Ao final do projeto e após a estabilização do sistema, espera-se que a organização obtenha os seguintes benefícios:',{size:22}),{align:AlignmentType.JUSTIFIED}),
+          sp(1),
+          ...aiBeneficios.map(b=>bullet(b)),
+          sp(3),
+        ] : []),
+
+        // ── SEC 13: AUTORIZAÇÃO ──
+        secTitle('13','Autorização Formal'),
+        sp(2),
+        para(run(ai.autorizacao || `Este Termo de Abertura do Projeto autoriza formalmente o início do projeto ${data.nome}. A partir desta data, o Gerente de Projetos recebe autoridade para planejar, executar e controlar os recursos alocados ao projeto.`,{size:22}),
+          {align:AlignmentType.JUSTIFIED}),
+        sp(2),
+        table(
+          ['Papel','Nome / Cargo','Assinatura','Data'],
+          [
+            ['Patrocinador (Sponsor)', data.sponsor || '_______________', '_______________', '___/___/______'],
+            ['Gerente de Projetos', data.gerente || '_______________', '_______________', '___/___/______'],
+            ['Aprovação da Diretoria', '_______________', '_______________', '___/___/______'],
+          ],
+          [2000,2900,2900,1466]
+        ),
+        sp(2),
+        noteBox('A assinatura do Patrocinador é o elemento que confere validade e efetividade a este documento. Sem a assinatura formal, este Termo constitui apenas uma proposta de abertura de projeto.'),
+        sp(6),
+
+        // ── RODAPÉ DOCUMENTO ──
+        new Paragraph({
+          alignment:AlignmentType.CENTER,
+          border:{top:{style:BorderStyle.SINGLE,size:4,color:BORDER}},
+          spacing:{before:120,after:20},
+          children:[run(`Documento elaborado com base no Project Model Canvas`,{size:18,italic:true,color:MUTED})]
+        }),
+        new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{before:0,after:0},
+          children:[run(`${data.disciplina||'Gerência de Projetos'}  |  TAP v${data.versao}  |  ${data.data}`,{size:18,color:MUTED})]
+        }),
+
+      ]
+    }]
+  });
+
+  const buf = await Packer.toBuffer(doc);
+  return { blob: new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}), fname };
+}
+
+// ═══════════════════════════════════════════════
+// GENERATE ORCHESTRATION
+// ═══════════════════════════════════════════════
+let generatedBlob = null, generatedFname = '';
+
+function log(msg, cls='') {
+  const box = document.getElementById('log-box');
+  const span = document.createElement('span');
+  span.className = `log-line ${cls}`;
+  span.textContent = `> ${msg}`;
+  box.appendChild(span);
+  box.scrollTop = box.scrollHeight;
+}
+function setProgress(pct, label) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+async function generateTAP() {
+  const data = collectData();
+  if (!data.nome || !data.gerente || !data.sponsor || !data.justificativa || !data.objetivo || !data.produto) {
+    alert('Preencha ao menos: Nome do projeto, Gerente, Patrocinador, Justificativa, Objetivo e Produto (passos 1–3).');
+    return;
+  }
+  document.getElementById('btnGen').disabled = true;
+  document.getElementById('progress-area').style.display = 'block';
+  document.getElementById('dl-area').style.display = 'none';
+  document.getElementById('log-box').innerHTML = '';
+
+  try {
+    setProgress(10, 'Coletando dados do formulário...');
+    log('Dados coletados com sucesso', 'log-ok');
+    await delay(300);
+
+    setProgress(30, 'Enviando para a IA (Claude)...');
+    log('Conectando à API Claude...', 'log-work');
+    const ai = await enrichWithAI(data);
+    log('Texto expandido pela IA com sucesso', 'log-ok');
+
+    setProgress(60, 'Construindo documento Word...');
+    log('Gerando estrutura DOCX...', 'log-work');
+    await delay(200);
+    const { blob, fname } = await buildDocx(data, ai);
+    generatedBlob = blob;
+    generatedFname = fname;
+
+    setProgress(90, 'Finalizando documento...');
+    log(`Documento gerado: ${fname}`, 'log-ok');
+    await delay(300);
+
+    setProgress(100, 'Concluído!');
+    log('TAP pronto para download!', 'log-ok');
+    document.getElementById('dl-filename').textContent = `${fname} — documento completo pronto para entrega`;
+    document.getElementById('dl-area').style.display = 'block';
+
+  } catch(e) {
+    log('Erro: ' + e.message, 'log-err');
+    log('Tentando gerar documento sem IA...', 'log-work');
+    // fallback sem IA
+    try {
+      const fallbackAI = {
+        justificativa_expandida: data.justificativa,
+        objetivo_expandido: data.objetivo,
+        produto_expandido: data.produto,
+        premissas_lista: data.premissas ? data.premissas.split(/[;\n]+/).filter(Boolean) : [],
+        restricoes_lista: data.restricoes ? data.restricoes.split(/[;\n]+/).filter(Boolean) : [],
+        beneficios_lista: data.beneficios ? data.beneficios.split(/[;\n]+/).filter(Boolean) : [],
+        custos_lista: data.custos ? data.custos.split(/[;\n]+/).filter(Boolean) : [],
+        autorizacao: `Este Termo de Abertura do Projeto autoriza formalmente o início do projeto ${data.nome}. O Gerente de Projetos recebe autoridade para planejar, executar e controlar os recursos alocados ao projeto.`,
+        nota_risco: 'O plano completo de riscos será elaborado na fase de Planejamento.',
+        nota_orcamento: 'Os valores monetários exatos serão definidos e aprovados na fase de Planejamento.'
+      };
+      const { blob, fname } = await buildDocx(data, fallbackAI);
+      generatedBlob = blob;
+      generatedFname = fname;
+      setProgress(100, 'Concluído (sem enriquecimento IA)!');
+      log(`Documento gerado sem IA: ${fname}`, 'log-ok');
+      document.getElementById('dl-filename').textContent = `${fname} — gerado sem expansão IA`;
+      document.getElementById('dl-area').style.display = 'block';
+    } catch(e2) {
+      log('Falha crítica: ' + e2.message, 'log-err');
+    }
+  }
+
+  document.getElementById('btnGen').disabled = false;
+}
+
+function downloadDocx() {
+  if (!generatedBlob) return;
+  const url = URL.createObjectURL(generatedBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = generatedFname;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function delay(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// ═══════════════════════════════════════════════
+// CLEAR / LOAD EXAMPLE
+// ═══════════════════════════════════════════════
+function clearAll() {
+  if (!confirm('Limpar todos os campos?')) return;
+  document.querySelectorAll('input[type=text],textarea').forEach(el=>el.value='');
+  document.getElementById('stakes-list').innerHTML='';
+  document.getElementById('team-list').innerHTML='';
+  document.getElementById('risks-list').innerHTML='';
+  document.getElementById('phases-list').innerHTML='';
+  stakeCount=teamCount=riskCount=phaseCount=0;
+  checkReady();
+}
+
+function loadExample() {
+  document.getElementById('nome').value = 'Drive Flex — Sistema Integrado de Gestão de Frotas com IA';
+  document.getElementById('gerente').value = 'José Finocchio Junior';
+  document.getElementById('sponsor').value = 'Diretoria — Drive Flex';
+  document.getElementById('empresa').value = 'Drive Flex Ltda.';
+  document.getElementById('data').value = 'Março de 2026';
+  document.getElementById('disciplina').value = 'Gerência de Projetos — Engenharia de Software';
+  document.getElementById('versao').value = '1.0';
+  document.getElementById('justificativa').value = 'A empresa Drive Flex opera com processos manuais de gestão de frotas e planilhas descentralizadas, sem integração entre unidades físicas. Essa estrutura gera ineficiência operacional, erros no controle de KM e manutenções, e dificuldade no planejamento financeiro pela falta de dados consolidados de depreciação em tempo real.';
+  document.getElementById('objetivo').value = 'Desenvolver e implantar um sistema centralizado de gestão de frota com módulo de inteligência artificial na Drive Flex, no prazo máximo de 12 meses, respeitando o orçamento aprovado pela diretoria, de forma a eliminar o uso de planilhas descentralizadas e entregar dashboards de indicadores em tempo real.';
+  document.getElementById('beneficios').value = 'Redução de custos operacionais; melhoria do planejamento financeiro; otimização da manutenção preditiva; processo de locação mais ágil com visibilidade em tempo real';
+  document.getElementById('produto').value = 'Sistema web integrado de gestão de frotas e controle de estoque, com módulo de IA para previsão de depreciação e manutenção preventiva, e integração via API com o WhatsApp para comunicação com clientes e equipes operacionais.';
+  document.getElementById('requisitos').value = 'Cadastro de veículos; controle de disponibilidade multilocais; registro de locação; controle de KM/revisões; IA para depreciação; integração WhatsApp; dashboards de indicadores; consumo de APIs externas de dados de mercado';
+  document.getElementById('exclusoes').value = 'Operação física de retirada e devolução de veículos (permanece manual nas unidades físicas)';
+  document.getElementById('premissas').value = 'A operação física de retirada/devolução será mantida como está; clientes utilizam WhatsApp ativamente; orçamento será liberado conforme cronograma; APIs de dados de mercado estarão disponíveis durante o desenvolvimento';
+  document.getElementById('restricoes').value = 'Prazo máximo de 12 meses; orçamento limitado ao aprovado pela diretoria; dependência de fontes de dados externas para alimentar o módulo de IA';
+  document.getElementById('custos').value = 'Equipe de desenvolvimento (12 meses); licenciamento de APIs (WhatsApp e dados de mercado); infraestrutura em nuvem; horas de treinamento e Go-Live';
+  document.getElementById('duracao').value = '12 meses';
+
+  document.getElementById('stakes-list').innerHTML='';
+  document.getElementById('team-list').innerHTML='';
+  document.getElementById('risks-list').innerHTML='';
+  document.getElementById('phases-list').innerHTML='';
+  stakeCount=teamCount=riskCount=phaseCount=0;
+
+  addStake('Diretoria','Patrocinadora — aprova orçamento e recebe dashboards estratégicos','Alto');
+  addStake('Funcionários das unidades físicas','Usuários finais — operadores do sistema de locação e controle','Alto');
+  addStake('Equipe administrativa','Usuária de relatórios financeiros e de estoque','Médio');
+  addStake('Clientes','Recebem notificações e interagem via WhatsApp integrado','Médio');
+  addStake('Provedores de APIs externas','Fornecedores de dados de mercado para o módulo de IA','Médio');
+
+  addTeam('Gerente de Projetos','Planejamento, controle e comunicação com stakeholders');
+  addTeam('Analista de Requisitos','Levantamento e documentação de requisitos funcionais e não funcionais');
+  addTeam('Desenvolvedor Front-end','Interface web — usabilidade, responsividade e experiência do usuário');
+  addTeam('Desenvolvedor Back-end','Lógica de negócio, APIs RESTful e integrações com sistemas externos');
+  addTeam('Engenheiro de Dados / IA','Desenvolvimento e validação dos modelos preditivos de depreciação');
+  addTeam('Analista de QA','Homologação, testes e validação para o Go-Live');
+
+  addRisk('Baixa adoção do sistema pelos funcionários das unidades físicas','Médio','Alto','Plano de treinamento estruturado no Go-Live (Fase 4)');
+  addRisk('Estimativas do módulo de IA imprecisas por dados insuficientes','Médio','Médio','Ciclos iterativos de validação com dados reais nos Meses 9–10');
+  addRisk('Instabilidade ou mudança de política na API do WhatsApp','Alto','Alto','Monitoramento contínuo; plano de contingência com canal alternativo');
+
+  addPhase('Fase 1 — Planejamento','Meses 1–2','EAP, plano de projeto, levantamento de requisitos');
+  addPhase('Fase 2 — Desenvolvimento e Integração','Meses 3–8','Módulos core, integração WhatsApp e APIs externas');
+  addPhase('Fase 3 — IA e Testes','Meses 9–10','Modelos de depreciação validados; homologação QA');
+  addPhase('Fase 4 — Implantação e Treinamento','Meses 11–12','Go-Live; capacitação das equipes; migração das planilhas');
+
+  checkReady();
+  showPanel('p1', navBtn('p1'));
+  alert('Dados do Drive Flex carregados! Navegue pelas abas e clique em "Gerar TAP" quando estiver pronto.');
+}
+</script>
+</body>
+</html>
