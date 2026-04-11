@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gerador de TAP — Project Charter</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+<script>
+  // Fallback caso o CDN principal falhe
+  if (typeof window.docx === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"><\/script>');
+  }
+</script>
 <style>
 :root {
   --navy: #0f2a4a;
@@ -992,65 +998,33 @@ function collectData() {
 }
 
 // ═══════════════════════════════════════════════
-// AI ENRICHMENT via Claude API
+// AI ENRICHMENT via backend (/api/generate → Gemini)
 // ═══════════════════════════════════════════════
 async function enrichWithAI(data) {
-  const prompt = `Você é um especialista em gerência de projetos (PMBOK). Com base nos dados do Project Model Canvas abaixo, expanda cada seção em texto formal e profissional para compor o TAP (Termo de Abertura do Projeto). Retorne APENAS um JSON válido com as chaves abaixo, sem markdown.
-
-DADOS DO CANVAS:
-- Projeto: ${data.nome}
-- Justificativa: ${data.justificativa}
-- Objetivo: ${data.objetivo}
-- Produto: ${data.produto}
-- Requisitos: ${data.requisitos}
-- Exclusões: ${data.exclusoes}
-- Premissas: ${data.premissas}
-- Restrições: ${data.restricoes}
-- Benefícios: ${data.beneficios}
-- Custos: ${data.custos}
-- Stakeholders: ${JSON.stringify(data.stakes)}
-- Equipe: ${JSON.stringify(data.team)}
-- Riscos: ${JSON.stringify(data.risks)}
-- Fases: ${JSON.stringify(data.phases)}
-
-Retorne JSON com estas chaves (todas as strings em português formal, 2-4 parágrafos quando indicado):
-{
-  "justificativa_expandida": "texto formal com 2-3 parágrafos expandindo a justificativa, contextualizando o problema e a necessidade do projeto",
-  "objetivo_expandido": "texto formal com 1-2 parágrafos expandindo o objetivo SMART",
-  "produto_expandido": "texto formal descrevendo o produto/solução em 1-2 parágrafos",
-  "premissas_lista": ["premissa 1 formal", "premissa 2 formal", "..."],
-  "restricoes_lista": ["restrição 1 formal com letra bold no início ex: 'Prazo: texto'", "..."],
-  "beneficios_lista": ["benefício 1 formal", "..."],
-  "custos_lista": ["categoria: descrição", "..."],
-  "autorizacao": "parágrafo formal de autorização do projeto com 2-3 linhas",
-  "nota_risco": "frase curta de nota sobre o plano completo de riscos ser feito no planejamento",
-  "nota_orcamento": "frase curta de nota sobre valores serem definidos no planejamento"
-}`;
-
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const resp = await fetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: prompt }]
-    })
+    body: JSON.stringify(data)
   });
-  if (!resp.ok) throw new Error(`API ${resp.status}`);
-  const json = await resp.json();
-  const text = json.content[0].text.replace(/```json|```/g,'').trim();
-  return JSON.parse(text);
+  if (!resp.ok) {
+    const err = await resp.json().catch(()=>({error:`HTTP ${resp.status}`}));
+    throw new Error(err.error || `API ${resp.status}`);
+  }
+  return await resp.json();
 }
 
 // ═══════════════════════════════════════════════
 // DOCX GENERATION
 // ═══════════════════════════════════════════════
 async function buildDocx(data, ai) {
+  if (typeof window.docx === 'undefined') {
+    throw new Error('Biblioteca docx não carregou (verifique a conexão com a internet / CDN).');
+  }
   const {
     Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
     AlignmentType, BorderStyle, WidthType, ShadingType, LevelFormat,
     VerticalAlign, Header, Footer, PageBreak
-  } = docx;
+  } = window.docx;
 
   const BLUE = '1a5ea8'; const NAVY = '0f2a4a';
   const BLUE_LIGHT = 'dce8f7'; const ACCENT = 'f0a500';
@@ -1491,8 +1465,8 @@ async function buildDocx(data, ai) {
     }]
   });
 
-  const buf = await Packer.toBuffer(doc);
-  return { blob: new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}), fname };
+  const blob = await Packer.toBlob(doc);
+  return { blob, fname };
 }
 
 // ═══════════════════════════════════════════════
@@ -1529,8 +1503,8 @@ async function generateTAP() {
     log('Dados coletados com sucesso', 'log-ok');
     await delay(300);
 
-    setProgress(30, 'Enviando para a IA (Claude)...');
-    log('Conectando à API Claude...', 'log-work');
+    setProgress(30, 'Enviando para a IA (Gemini)...');
+    log('Conectando ao backend /api/generate (Gemini)...', 'log-work');
     const ai = await enrichWithAI(data);
     log('Texto expandido pela IA com sucesso', 'log-ok');
 
